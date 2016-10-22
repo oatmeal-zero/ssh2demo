@@ -13,18 +13,12 @@ int main(int argc, char *argv[])
  
     ssh2_init();
 
-    SshClient client(hostname, port);
-    client.connect(username, password);
-    //client.execute(commandline);
-    //client.open_channel();
-    //client.channel_read();
-    //client.channel_write("cd carv3");
-    //client.channel_read();
-    //client.channel_write("svn up ");
-    //client.channel_read();
-    //SftpClient sftp(&client);
-    //sftp.get("cdkey_record.csv", "batch_record.csv");
-    //sftp.put("dir.mk", "dir.mk");
+    SshClient ssh(hostname, port);
+    ssh.connect(username, password);
+    //ssh.execute(commandline);
+    //SftpClient sftp(&ssh);
+    //sftp.get("test.txt", "test.txt");
+    //sftp.put("test2.txt", "test2.txt");
 
     ssh2_exit();
  
