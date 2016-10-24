@@ -32,6 +32,8 @@ struct THost
     string Caption;
 
     int update(TSvn *svn);
+    int stop();
+    int run();
 };
 
 class CSvrGrp

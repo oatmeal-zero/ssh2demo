@@ -5,7 +5,7 @@ IMPORT_LIBRARY_FLAGS += $(patsubst %,-L%/tools/tcp,$(IMPORT_TREES))
 IMPORT_LIBRARY_FLAGS += $(patsubst %,-L%/tools/cpkg,$(IMPORT_TREES))
 IMPORT_LIBRARY_FLAGS += $(patsubst %,-L%/3rd/jsoncpp,$(IMPORT_TREES))
 
-LIBS = -lssh2 -ljson
+LIBS = -lssh2 -ljson 
 TARGET = test
 OBJ = main.o SshClient.o config.o
 

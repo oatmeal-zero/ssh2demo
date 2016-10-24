@@ -110,6 +110,46 @@ int THost::update(TSvn *svn)
     return 0;
 }
 
+int THost::stop()
+{
+    if (Disable) {
+        printf("skip host [%s:%d]\n", IpAddr.c_str(), Port);
+        return 0;
+    }
+
+    printf("stop host [%s:%d]\n", IpAddr.c_str(), Port);
+    SshClient ssh(IpAddr.c_str(), Port);
+    ssh.connect(UserName.c_str(), Passwd.c_str());
+
+    char command[1024]{0};
+    sprintf(command, "cd %s\n"
+            "sh stop.sh",
+            ProjectPath.c_str());
+    ssh.execute(command);
+    return 0;
+}
+
+int THost::run()
+{
+    if (Disable) {
+        printf("skip host [%s:%d]\n", IpAddr.c_str(), Port);
+        return 0;
+    }
+
+    printf("run host [%s:%d]\n", IpAddr.c_str(), Port);
+    SshClient ssh(IpAddr.c_str(), Port);
+    ssh.connect(UserName.c_str(), Passwd.c_str());
+
+    char command[1024]{0};
+    sprintf(command, "cd %s\n"
+            "source /etc/profile\n"
+            "source ~/.bash_profile\n"
+            "sh run.sh",
+            ProjectPath.c_str());
+    ssh.execute(command);
+    return 0;
+}
+
 int CHostMgr::update() 
 {
     for (auto iter = _hostlist.begin(); iter != _hostlist.end(); ++iter)
@@ -122,10 +162,20 @@ int CHostMgr::update()
 
 int CHostMgr::stop()
 {
+    for (auto iter = _hostlist.begin(); iter != _hostlist.end(); ++iter)
+    {
+        (*iter).stop();
+    }
+
     return 0;
 }
 
 int CHostMgr::run()
 {
+    for (auto iter = _hostlist.begin(); iter != _hostlist.end(); ++iter)
+    {
+        (*iter).run();
+    }
+
     return 0;
 }
