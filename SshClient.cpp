@@ -106,7 +106,7 @@ bool SshClient::execute(const char *command)
         rc = libssh2_channel_read( channel, buffer, sizeof(buffer) );
         for(int i=0; i < rc; ++i )
             fputc(buffer[i], stdout);
-        fprintf(stdout, "\n");
+        //fprintf(stdout, "\n");
     } while(rc > 0);
 
     exitcode = 127;

@@ -2,19 +2,86 @@
 #include <stdlib.h>
 
 #include "SshClient.h"
+#include "config.h"
+
+const char *_VERSION = "1.0.0";
+
+void clear()
+{
+    system("clear");
+}
+
+TSvrGrp* welcome()
+{
+    CSvrGrp svrgrp;
+    svrgrp.load("config.json");
+    TSvrGrp* grp;
+    while (true) {
+        clear();
+        cout << "欢迎使用服务器管理工具，当前版本：" << _VERSION << endl;
+        svrgrp.list();
+
+        cout << "请选择> ";
+        string input;
+        cin >> input;
+
+        grp = svrgrp.getGrp(input);
+        if (grp) break;
+    } 
+
+    return grp;
+}
+
+int dispatch(TSvrGrp* grp)
+{
+    if (grp->name.empty()) return -1;
+
+    CHostMgr hostmgr;
+    hostmgr.load(grp->config.c_str());
+
+    while (true) {
+        clear();
+        hostmgr.list();
+        string input;
+        cout << "[B]后退 [U]更新 [S]停服 [R]启动 [Q]退出" << endl;
+        cout << "请选择> ";
+        cin >> input;
+
+        switch (input[0]) {
+            case 'b':
+            case 'B':
+                return 1;
+            case 'u':
+            case 'U':
+                return hostmgr.update();
+            case 's':
+            case 'S':
+                return hostmgr.stop();
+            case 'r':
+            case 'R':
+                return hostmgr.run();
+            case 'q':
+            case 'Q':
+                return 0;
+        }
+    }
+
+    return 0;
+}
 
 int main(int argc, char *argv[])
 {
-    const char *hostname="192.168.1.45";
-    int port = 22;
-    const char *username="car";
-    const char *password="111";
-    const char *commandline="ls -l";
- 
     ssh2_init();
 
-    SshClient ssh(hostname, port);
-    ssh.connect(username, password);
+    int ret = 0;
+    while (true) {
+        TSvrGrp* grp = welcome();
+        ret = dispatch(grp);
+        if (ret == 0) break;
+    }
+
+    //SshClient ssh(hostname, port);
+    //ssh.connect(username, password);
     //ssh.execute(commandline);
     //SftpClient sftp(&ssh);
     //sftp.get("test.txt", "test.txt");
