@@ -4,6 +4,18 @@
 #include "json/json.h"
 #include "SshClient.h"
 
+static int GetHostType(string cfg)
+{
+    switch (cfg[0])
+    {
+        case 'D':
+            return HT_DB;
+        case 'G':
+            return HT_GS;
+    }
+    return HT_NIL;
+}
+
 void CSvrGrp::load(string config)
 {
     ifstream ifs;
@@ -32,7 +44,7 @@ void CSvrGrp::list()
 {
     for (auto iter = _grps.begin(); iter != _grps.end(); ++iter)
     {
-        cout << "[" << iter->first << "]" << (iter->second).name << endl;
+        printf("[%s] %s\n", iter->first.c_str(), (iter->second).name.c_str());
     }
 }
 
@@ -61,7 +73,8 @@ void CHostMgr::load(string config)
     {
         THost host = { 
             hostlist[idx]["Disable"].asBool(), 
-            hostlist[idx]["HostType"].asString(),
+            //hostlist[idx]["HostType"].asString(),
+            GetHostType(hostlist[idx]["HostType"].asString()),
             hostlist[idx]["IpAddr"].asString(),
             hostlist[idx]["Port"].asInt(),
             hostlist[idx]["UserName"].asString(),
@@ -90,9 +103,14 @@ void CHostMgr::list()
     }
 }
 
-int THost::update(TSvn *svn)
+int THost::update(TSvn *svn, int hostType)
 {
     if (Disable) {
+        printf("skip host [%s:%d]\n", IpAddr.c_str(), Port);
+        return 0;
+    }
+
+    if (!(HostType & hostType)) {
         printf("skip host [%s:%d]\n", IpAddr.c_str(), Port);
         return 0;
     }
@@ -102,10 +120,18 @@ int THost::update(TSvn *svn)
     ssh.connect(UserName.c_str(), Passwd.c_str());
 
     char command[1024]{0};
-    sprintf(command, "cd %s\n"
-            "svn up %s --username %s --password %s --non-interactive",
-            ProjectPath.c_str(), ProjectPath.c_str(), 
-            svn->username.c_str(), svn->passwd.c_str());
+    if (HostType == HT_DB) {
+        sprintf(command, "cd %s\n"
+                "svn up %s --username %s --password %s --non-interactive\n"
+                "sh auto_import.sh",
+                ProjectPath.c_str(), ProjectPath.c_str(), 
+                svn->username.c_str(), svn->passwd.c_str());
+    } else {
+        sprintf(command, "cd %s\n"
+                "svn up %s --username %s --password %s --non-interactive",
+                ProjectPath.c_str(), ProjectPath.c_str(), 
+                svn->username.c_str(), svn->passwd.c_str());
+    }
     ssh.execute(command);
     return 0;
 }
@@ -114,6 +140,11 @@ int THost::stop()
 {
     if (Disable) {
         printf("skip host [%s:%d]\n", IpAddr.c_str(), Port);
+        return 0;
+    }
+
+    if (HostType == HT_DB) {
+        printf("skip db host [%s:%d]\n", IpAddr.c_str(), Port);
         return 0;
     }
 
@@ -136,6 +167,11 @@ int THost::run()
         return 0;
     }
 
+    if (HostType == HT_DB) {
+        printf("skip db host [%s:%d]\n", IpAddr.c_str(), Port);
+        return 0;
+    }
+
     printf("run host [%s:%d]\n", IpAddr.c_str(), Port);
     SshClient ssh(IpAddr.c_str(), Port);
     ssh.connect(UserName.c_str(), Passwd.c_str());
@@ -150,11 +186,11 @@ int THost::run()
     return 0;
 }
 
-int CHostMgr::update() 
+int CHostMgr::update(int hostType) 
 {
     for (auto iter = _hostlist.begin(); iter != _hostlist.end(); ++iter)
     {
-        (*iter).update(&_svn);
+        (*iter).update(&_svn, hostType);
     }
 
     return 0;

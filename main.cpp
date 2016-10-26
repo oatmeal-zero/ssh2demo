@@ -3,18 +3,19 @@
 
 #include "SshClient.h"
 #include "config.h"
+#include "command.h"
 
 const char *_VERSION = "1.0.0";
 
-void cls()
+static void cls()
 {
     system("clear");
 }
 
-void suspend()
+static void suspend()
 {
+    printf("按回车键继续...\n");
     setbuf(stdin, NULL);
-    cout << "按回车键继续..." << endl;
     getchar();
 }
 
@@ -25,12 +26,12 @@ TSvrGrp* welcome()
     TSvrGrp* grp;
     while (true) {
         cls();
-        cout << "欢迎使用服务器管理工具，当前版本：" << _VERSION << endl;
+        printf("欢迎使用服务器管理工具，当前版本：%s\n", _VERSION);
         svrgrp.list();
 
-        cout << "请选择> ";
-        string input;
-        cin >> input;
+        printf("请选择> ");
+        char input[128]{0};
+        scanf("%s", input);
 
         grp = svrgrp.getGrp(input);
         if (grp) break;
@@ -49,34 +50,19 @@ int dispatch(TSvrGrp* grp)
     while (true) {
         cls();
         hostmgr.list();
-        string input;
-        cout << "[B]后退 [U]更新 [S]停服 [R]启动 [Q]退出" << endl;
-        cout << "请选择> ";
-        cin >> input;
+        Command::list();
+        printf("请选择> ");
+        int input;
+        scanf("%d", &input);
 
-        switch (input[0]) {
-            case 'b':
-            case 'B':
-                return 1;
-            case 'u':
-            case 'U':
-                hostmgr.update();
-                suspend();
-                break;
-            case 's':
-            case 'S':
-                hostmgr.stop();
-                suspend();
-                break;
-            case 'r':
-            case 'R':
-                hostmgr.run();
-                suspend();
-                break;
-            case 'q':
-            case 'Q':
-                return 0;
+        int rtCode = Command::execute(input, &hostmgr);
+        if (rtCode < 0) {
+            printf("无效的指令，请重新输入！\n");
+        } else if (rtCode > 0) {
+            if (rtCode == 1) return 0;
+            if (rtCode == 2) return 1;
         }
+        suspend();
     }
 
     return 0;
@@ -94,6 +80,8 @@ int main(int argc, char *argv[])
     }
 
     ssh2_exit();
+
+    printf("bye.\n");
  
     return 0;
 }

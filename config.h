@@ -5,8 +5,13 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
+
+#define HT_NIL  0
+#define HT_DB   1 << 0
+#define HT_GS   1 << 1
 
 struct TSvrGrp
 {
@@ -23,7 +28,7 @@ struct TSvn
 struct THost
 {
     bool Disable;
-    string HostType;
+    int HostType;
     string IpAddr;
     int Port;
     string UserName;
@@ -31,7 +36,7 @@ struct THost
     string ProjectPath;
     string Caption;
 
-    int update(TSvn *svn);
+    int update(TSvn *svn, int hostType);
     int stop();
     int run();
 };
@@ -61,7 +66,7 @@ class CHostMgr
 public:
     void load(string config);
     void list();
-    int update();
+    int update(int hostType);
     int stop();
     int run();
 
