@@ -122,12 +122,16 @@ int THost::update(TSvn *svn, int hostType)
     char command[1024]{0};
     if (HostType == HT_DB) {
         sprintf(command, "cd %s\n"
+                "source /etc/profile\n"
+                "source ~/.bash_profile\n"
                 "svn up %s --username %s --password %s --non-interactive\n"
                 "sh auto_import.sh",
                 ProjectPath.c_str(), ProjectPath.c_str(), 
                 svn->username.c_str(), svn->passwd.c_str());
     } else {
         sprintf(command, "cd %s\n"
+                "source /etc/profile\n"
+                "source ~/.bash_profile\n"
                 "svn up %s --username %s --password %s --non-interactive",
                 ProjectPath.c_str(), ProjectPath.c_str(), 
                 svn->username.c_str(), svn->passwd.c_str());
@@ -154,6 +158,8 @@ int THost::stop()
 
     char command[1024]{0};
     sprintf(command, "cd %s\n"
+            "source /etc/profile\n"
+            "source ~/.bash_profile\n"
             "sh stop.sh",
             ProjectPath.c_str());
     ssh.execute(command);
